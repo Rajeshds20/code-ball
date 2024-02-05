@@ -1,33 +1,26 @@
 import React, { useRef } from 'react';
-import Editor from '@monaco-editor/react';
 import Split from 'react-split';
+import { db } from './config/firebase';
+import { collection, addDoc, getDocs, onSnapshot, query, setDoc, doc } from 'firebase/firestore';
+import { defaults } from './config/default';
+import CodeEditor from './components/CodeEditor';
+import { getUniqueCode } from './config/helpers';
+import ShareDialog from './components/ShareDialog';
+
 import './App.css';
 
-const files = {
-  'index.html': {
-    name: 'index.html',
-    language: 'html',
-    value: '<!DOCTYPE html>\n<html>\n  <head>\n    <link rel="stylesheet" href="style.css" />\n  </head>\n  <body>\n    <h1>Hello World</h1>\n    <script src="script.js"></script>\n  </body>\n</html>',
-  },
-  'style.css': {
-    name: 'style.css',
-    language: 'css',
-    value: 'body { background-color: #282c34; color: white; }',
-  },
-  'script.js': {
-    name: 'script.js',
-    language: 'javascript',
-    value: 'console.log(\'Hello, world!\');',
-  },
-};
+const fileNames = ['index.html', 'style.css', 'script.js'];
 
 function App() {
-  const [fileName, setFileName] = React.useState('index.html');
   const [iframeSrcDoc, setIframeSrcDoc] = React.useState('');
-  const [refresh, setRefresh] = React.useState(false);
-
-  const file = files[fileName];
+  const [timer, setTimer] = React.useState(null);
+  const [files, setFiles] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const codeCollectionRef = collection(db, "codepens");
   const iframeRef = useRef(null);
+  const codeBallId = window.location.pathname.slice(1) || null;
+  const [currentDocId, setCurrentDocId] = React.useState(null);
+  const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
 
   const runCode = () => {
     const iframe = iframeRef.current;
@@ -39,74 +32,123 @@ function App() {
     iframe.srcdoc = combinedCode;
   };
 
+  const getData = async () => {
+    const querySnapshot = await getDocs(codeCollectionRef);
+    console.log(querySnapshot)
+  }
+
   React.useEffect(() => {
-    runCode();
-    console.log(files);
-  }, [fileName, refresh]);
+
+    const getDocWithId = () => {
+      if (codeBallId) {
+        // get code from firestore
+        getDocs(codeCollectionRef).then((querySnapshot) => {
+          querySnapshot.forEach((doc) => {
+            // console.log(doc.data().code === codeBallId);
+            if (doc.data().code === codeBallId) {
+              setFiles(doc.data());
+              setLoading(false);
+              setTimeout(runCode, 2000);
+              setCurrentDocId(doc.id);
+              return;
+            }
+          });
+        });
+        // setFiles(codeFromFirestore);
+      }
+      // console.log(defaults)
+      setFiles(defaults);
+      setLoading(false);
+      setTimeout(runCode, 2000);
+    }
+
+    // runCode();
+    // getDocs();
+    // const q = query(codeCollectionRef)
+    // onSnapshot(q, (querySnapshot) => {
+    //   querySnapshot.forEach((doc) => {
+    //     console.log(doc.id, " => ", doc.data());
+    //   });
+    // });
+    // getUniqueCode().then((code) => {
+    //   console.log('Unique', code);
+    // });
+
+    getDocWithId();
+  }, []);
+
+  const handleChange = (val, file) => {
+    files[file].value = val;
+    clearTimeout(timer);
+    setTimer(setTimeout(runCode, 1500));
+  }
+
+  const handleSave = async () => {
+    if (codeBallId) {
+      // update the document in firestore using Id
+      await setDoc(doc(codeCollectionRef, currentDocId), files);
+    }
+    else {
+      // add a new document to firestore
+      const code = await getUniqueCode();
+      const docRef = await addDoc(codeCollectionRef, { ...files, code });
+      setCurrentDocId(docRef.id);
+      // Navigate to the new URL
+      window.history.pushState({}, null, `/${code}`);
+    }
+  }
+
+  const handleShareOpen = () => {
+    setShareDialogOpen(true);
+  };
+  const handleShareClose = () => {
+    setShareDialogOpen(false);
+  };
 
   return (
     <>
-      <Split
-        className='split'
-      >
-        <div>
-          <h3 style={{ textAlign: 'center' }}>Index.html</h3>
-          <Editor
-            defaultLanguage="html"
-            defaultValue="// some comment"
-            value={file.value}
-            onChange={(value) => {
-              files[fileName].value = value;
-              setRefresh(!refresh);
-            }}
-            options={{
-              minimap: { enabled: false },
-            }}
-          />
-        </div>
-        <div>
-          <h3 style={{ textAlign: 'center' }}>Style.css</h3>
-          <Editor
-            defaultLanguage="css"
-            defaultValue="// some comment"
-            value={files['style.css'].value}
-            onChange={(value) => {
-              files['style.css'].value = value;
-              setRefresh(!refresh);
-            }}
-            options={{
-              minimap: { enabled: false },
-            }}
-          />
-        </div>
-        <div>
-          <h3 style={{ textAlign: 'center' }}>Script.js</h3>
-          <Editor
-            defaultLanguage="javascript"
-            defaultValue="// some comment"
-            value={files['script.js'].value}
-            onChange={(value) => {
-              files['script.js'].value = value;
-              setRefresh(!refresh);
-            }}
-            options={{
-              minimap: { enabled: false },
-            }}
-          />
-        </div>
-      </Split>
-      <h2 style={{ textAlign: 'center', marginTop: '50px', marginBottom: '10px' }}>Output :</h2>
-      <iframe
-        title="output"
-        ref={iframeRef}
-        srcDoc={iframeSrcDoc}
-        height='400px'
-        width="100%"
-        style={{ border: 'none' }
-        }
-      />
+      {
+        loading ? <div className="loader"></div>
+          :
+          <>
+            <Split
+              className='split'
+            >
+              {fileNames.map((file) => {
+                return (
+                  <div key={file} className='editor-container'>
+                    <h2>{file}</h2>
+                    <CodeEditor
+                      language={files[file].language}
+                      file={file}
+                      files={files}
+                      handleChange={handleChange}
+                    />
+                  </div>
+                )
+              })
+              }
+            </Split>
+            <div style={{ textAlign: 'center', marginTop: '50px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', padding: '0px', height: '60px', paddingLeft: '15px', paddingRight: '15px' }}>
+              <button onClick={handleSave}>Save</button>
+              <h2>Output :</h2>
+              <button onClick={handleShareOpen}>Share</button>
+            </div>
+            <iframe
+              title="output"
+              ref={iframeRef}
+              srcDoc={iframeSrcDoc}
+              height='500px'
+              width="100%"
+              style={{ border: 'none' }
+              }
+            />
+            <ShareDialog open={shareDialogOpen} handleClose={handleShareClose} handleClickOpen={handleShareOpen} codeBallId={codeBallId} />
+          </>
+      }
     </>
   );
 }
 
 export default App;
+
