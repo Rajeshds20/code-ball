@@ -2,7 +2,7 @@ export const defaults = {
     'index.html': {
         name: 'Index.html',
         language: 'html',
-        value: '<!DOCTYPE html>\n<html>\n  <head>\n    <link rel="stylesheet" href="style.css" />\n  </head>\n  <body>\n    <h1>Hello World</h1>\n    <script src="script.js"></script>\n  </body>\n</html>',
+        value: '<!DOCTYPE html>\n<html>\n  <head>\n    <link rel="stylesheet" href="style.css" />\n  </head>\n  <body>\n    <h1>Hello World</h1>\n  </body>\n</html>',
     },
     'style.css': {
         name: 'Style.css',
