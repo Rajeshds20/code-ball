@@ -13,7 +13,7 @@ const fileNames = ['index.html', 'style.css', 'script.js'];
 
 function App() {
   const [iframeSrcDoc, setIframeSrcDoc] = React.useState('');
-  const [timer, setTimer] = React.useState(null);
+  const [timeId, setTimeId] = React.useState(null);
   const [files, setFiles] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const codeCollectionRef = collection(db, "codepens");
@@ -45,7 +45,7 @@ function App() {
           // originalLog.apply(console, arguments);
 
           // Send the log message to the log viewer iframe using postMessage
-          window.parent.postMessage(message, '*');
+          window.parent.postMessage('from'+message, '*');
       };
   }
 
@@ -79,9 +79,19 @@ function App() {
             }
           });
         });
+        // setFiles(codeFromFirestore);
       };
 
+      // window.onload = () => {
 
+      //   window.addEventListener('message', (event) => {
+      //     setOutputLog(outputLog + event.data + '\n');
+      //     console.log(event.data)
+      //   });
+      //   console.log('Window Loaded');
+      // };
+
+      // console.log(defaults)
       setFiles(defaults);
       setLoading(false);
       setTimeout(runCode, 2000);
@@ -89,13 +99,25 @@ function App() {
     }
 
     const captureLogs = (event) => {
-      setOutputLog(prev => prev + event.data + '\n');
-      console.log(outputLog);
+      if (event.data && event.data.startsWith('from')) {
+        setOutputLog(prev => prev + event.data.slice(4,) + '\n');
+        // console.log(outputLog);
+      }
     };
 
-    setTimeout(() => {
-      window.addEventListener('message', captureLogs);
-    }, 2000);
+    window.addEventListener('message', captureLogs);
+
+    // runCode();
+    // getDocs();
+    // const q = query(codeCollectionRef)
+    // onSnapshot(q, (querySnapshot) => {
+    //   querySnapshot.forEach((doc) => {
+    //     console.log(doc.id, " => ", doc.data());
+    //   });
+    // });
+    // getUniqueCode().then((code) => {
+    //   console.log('Unique', code);
+    // });
 
     getDocWithId();
 
@@ -106,8 +128,8 @@ function App() {
 
   const handleChange = (val, file) => {
     files[file].value = val;
-    clearTimeout(timer);
-    setTimer(setTimeout(runCode, 1500));
+    // clearTimeout(timeId);
+    // setTimeId(setTimeout(runCode, 1500));
   }
 
   const handleSave = async () => {
@@ -158,8 +180,11 @@ function App() {
               })
               }
             </Split>
-            <div style={{ textAlign: 'center', marginTop: '50px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', padding: '0px', height: '60px', paddingLeft: '15px', paddingRight: '15px' }}>
-              <button onClick={handleSave}>Save</button>
+            <div style={{ textAlign: 'center', marginTop: '60px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0px', height: '60px', paddingLeft: '15px', paddingRight: '15px' }}>
+              <div>
+                <button onClick={runCode} style={{ textAlign: 'center' }}>Run</button>
+                <button onClick={handleSave}>Save</button>
+              </div>
               <h2>Output :</h2>
               <button onClick={handleShareOpen}>Share</button>
             </div>

@@ -16,6 +16,11 @@ body {
   background-color: #eee;
   background-repeat: no-repeat;
   background-position: 50%;
+  height: 115%;
+}
+
+.gutter:hover {
+  background-color: rgb(84, 84, 222);
 }
 
 .gutter.gutter-horizontal {
