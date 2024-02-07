@@ -2,6 +2,7 @@ import React from 'react'
 import Editor from '@monaco-editor/react';
 
 function CodeEditor(props) {
+
     return (
         <Editor
             height={'100%'}
@@ -11,8 +12,9 @@ function CodeEditor(props) {
                 props.handleChange(value, props.file);
             }}
             options={{
-                minimap: { enabled: false },
+                minimap: { enabled: props.showMinimaps },
             }}
+            theme={props.theme ? 'vs-dark' : 'light'}
         />
     )
 }

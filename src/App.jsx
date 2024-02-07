@@ -1,13 +1,16 @@
 import React, { useRef } from 'react';
 import Split from 'react-split';
 import { db } from './config/firebase';
-import { collection, addDoc, getDocs, onSnapshot, query, setDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, onSnapshot, query, setDoc, doc, updateDoc, where } from 'firebase/firestore';
 import { defaults } from './config/default';
 import CodeEditor from './components/CodeEditor';
 import { getUniqueCode } from './config/helpers';
 import ShareDialog from './components/ShareDialog';
 import Editor from '@monaco-editor/react';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import NightlightRoundIcon from '@mui/icons-material/NightlightRound';
 import './App.css';
+import SavedModal from './components/SavedModal';
 
 const fileNames = ['index.html', 'style.css', 'script.js'];
 
@@ -22,6 +25,9 @@ function App() {
   const [currentDocId, setCurrentDocId] = React.useState(null);
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
   const [outputLog, setOutputLog] = React.useState('');
+  const [darkMode, setDarkMode] = React.useState(false);
+  const [savedModalOpen, setSavedModalOpen] = React.useState(false);
+  const [showMiniMaps, setShowMiniMaps] = React.useState(false);
 
   const runCode = () => {
     const iframe = iframeRef.current;
@@ -64,21 +70,34 @@ function App() {
 
   React.useEffect(() => {
 
-    const getDocWithId = () => {
+    const getDocWithId = async () => {
+      var documentFetched = false;
       if (codeBallId) {
         // get code from firestore
-        getDocs(codeCollectionRef).then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            // console.log(doc.data().code === codeBallId);
-            if (doc.data().code === codeBallId) {
-              setFiles(doc.data());
-              setLoading(false);
-              setTimeout(runCode, 2000);
-              setCurrentDocId(doc.id);
-              return;
-            }
-          });
+        // getDocs(codeCollectionRef).then((querySnapshot) => {
+        //   querySnapshot.forEach((doc) => {
+        //     // console.log(doc.data().code === codeBallId);
+        //     if (doc.data().code === codeBallId) {
+        //       setFiles(doc.data());
+        //       setLoading(false);
+        //       setTimeout(runCode, 2000);
+        //       setCurrentDocId(doc.id);
+        //       return;
+        //     }
+        //   });
+        // });
+
+        const codeBallQuery = query(collection(db, "codepens"), where("code", "==", codeBallId));
+        const codeBallQuerySnapshot = await getDocs(codeBallQuery);
+        codeBallQuerySnapshot.forEach((doc) => {
+          setFiles(doc.data());
+          setLoading(false);
+          setTimeout(runCode, 2000);
+          setCurrentDocId(doc.id);
+          documentFetched = true;
         });
+
+
         // setFiles(codeFromFirestore);
       };
 
@@ -92,14 +111,20 @@ function App() {
       // };
 
       // console.log(defaults)
-      setFiles(defaults);
-      setLoading(false);
-      setTimeout(runCode, 2000);
-      window.history.pushState({}, null, '/');
+      if (!documentFetched) {
+        setFiles(defaults);
+        setLoading(false);
+        setTimeout(runCode, 2000);
+        setTimeout(() => {
+          if (!codeBallId) {
+            window.history.pushState({}, null, '/');
+          }
+        }, 2000);
+      }
     }
 
     const captureLogs = (event) => {
-      if (event.data && event.data.startsWith('from')) {
+      if (event.data?.startsWith('from')) {
         setOutputLog(prev => prev + event.data.slice(4,) + '\n');
         // console.log(outputLog);
       }
@@ -133,9 +158,12 @@ function App() {
   }
 
   const handleSave = async () => {
-    if (codeBallId) {
+    if (codeBallId != null) {
       // update the document in firestore using Id
-      await setDoc(doc(codeCollectionRef, currentDocId), files);
+      // await updateDoc(doc(db, "codepens", currentDocId), files);
+      // console.log('dvjcbruibeuire', currentDocId);
+      // console.log(doc(db, "codepens", currentDocId));
+      await setDoc(doc(db, "codepens", currentDocId), files);
     }
     else {
       // add a new document to firestore
@@ -146,7 +174,7 @@ function App() {
       // Navigate to the new URL
       window.history.pushState({}, null, `/${code}`);
     }
-    alert('Code Saved Successfully!');
+    setSavedModalOpen(true);
   }
 
   const handleShareOpen = () => {
@@ -165,28 +193,33 @@ function App() {
             <Split
               className='split'
             >
-              {fileNames.map((file) => {
+              {currentDocId && fileNames.map((file) => {
                 return (
-                  <div key={file} className='editor-container'>
+                  <div key={file} className={`editor-container ${darkMode ? 'dark' : 'light'}`}>
                     <h2 style={{ textAlign: 'center' }}>{file}</h2>
                     <CodeEditor
                       language={files[file].language}
                       file={file}
                       files={files}
                       handleChange={handleChange}
+                      theme={darkMode}
+                      showMinimaps={showMiniMaps}
                     />
                   </div>
                 )
               })
               }
             </Split>
-            <div style={{ textAlign: 'center', marginTop: '60px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0px', height: '60px', paddingLeft: '15px', paddingRight: '15px' }}>
+            <div
+              style={{ textAlign: 'center', marginTop: '60px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0px', height: '60px', paddingLeft: '15px', paddingRight: '15px' }}
+              className={darkMode ? 'dark' : 'light'}
+            >
               <div>
-                <button onClick={runCode} style={{ textAlign: 'center' }}>Run</button>
-                <button onClick={handleSave}>Save</button>
+                <button title='Run Code' onClick={runCode} style={{ textAlign: 'center' }}>Run</button>
+                <button title='Save the Page' onClick={handleSave}>Save</button>
               </div>
               <h2>Output :</h2>
-              <button onClick={handleShareOpen}>Share</button>
+              <button title='Share the Page' onClick={handleShareOpen}>Share</button>
             </div>
             <Split
               className='split'
@@ -218,6 +251,22 @@ function App() {
               </div>
             </Split>
             <ShareDialog open={shareDialogOpen} handleClose={handleShareClose} handleClickOpen={handleShareOpen} codeBallId={codeBallId} />
+            <div
+              title='Toggle Theme'
+              className={`dark-mode-toggle ${darkMode ? 'dark' : 'light'}`}
+              onClick={() => setDarkMode(!darkMode)}
+            >
+              {
+                darkMode
+                  ? <NightlightRoundIcon className='dark-mode' />
+                  : <LightModeIcon className='light-mode' />
+              }
+            </div>
+            <div className='editor-actions'>
+              <input className='show-minimaps' id='show-minimaps' type='checkbox' checked={showMiniMaps} onClick={() => { setShowMiniMaps(prev => !prev) }} />
+              <label htmlFor='show-minimaps'>Minimaps</label>
+            </div>
+            {savedModalOpen && <SavedModal open={savedModalOpen} handleClose={() => { setSavedModalOpen(false) }} />}
           </>
       }
     </>

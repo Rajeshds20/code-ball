@@ -50,9 +50,10 @@ export default function ShareDialog(props) {
                     </Typography>
                     <Link to={`/${props.codeBallId ? props.codeBallId : ''}`}>{window.location.href}</Link>
                     <ContentCopyIcon style={{ cursor: 'pointer', marginLeft: '10px' }} onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.href}/${props.codeBallId}`);
+                        navigator.clipboard.writeText(`${window.location.href}/`);
                         // Indicate that the link has been copied with toast
                         alert('Link copied to clipboard');
+                        props.handleClose();
                     }} />
                 </DialogContent>
                 <DialogActions>

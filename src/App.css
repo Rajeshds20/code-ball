@@ -44,3 +44,83 @@ button {
   background-color: #4CAF50;
   color: white;
 }
+
+.dark-mode-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border: 2px solid #333;
+  border-radius: 50%;
+  height: 20px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark {
+  background-color: #333;
+  color: white;
+  border-color: #eee;
+}
+
+.light {
+  background-color: #f5f5f5;
+  color: black;
+  border-color: #333;
+}
+
+.dark-mode {
+  transform: rotate(-45deg);
+}
+
+.dark-mode,
+.light-mode {
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+
+.dark-mode:hover,
+.light-mode:hover {
+  /* .dark-mode-toggle:hover { */
+  filter: drop-shadow(0px 10px 10px #1e6293);
+}
+
+#modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  /* background-color: red; */
+  color: red;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.close-icon {
+  font-size: 20px;
+  font-weight: bold;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.editor-actions {
+  position: absolute;
+  top: 25px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+  font-weight: 600;
+}
