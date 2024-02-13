@@ -15,7 +15,7 @@ import SavedModal from './components/SavedModal';
 const fileNames = ['index.html', 'style.css', 'script.js'];
 
 function App() {
-  const [iframeSrcDoc, setIframeSrcDoc] = React.useState('');
+  const [iframeSrcDoc, setIframeSrcDoc] = React.useState(`<style>*{background-color:black;color:white;text-align:center;}</style><h2>Click Run to start Coding...</h2>`);
   const [timeId, setTimeId] = React.useState(null);
   const [files, setFiles] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
@@ -193,22 +193,21 @@ function App() {
             <Split
               className='split'
             >
-              {currentDocId && fileNames.map((file) => {
-                return (
-                  <div key={file} className={`editor-container ${darkMode ? 'dark' : 'light'}`}>
-                    <h2 style={{ textAlign: 'center' }}>{file}</h2>
-                    <CodeEditor
-                      language={files[file].language}
-                      file={file}
-                      files={files}
-                      handleChange={handleChange}
-                      theme={darkMode}
-                      showMinimaps={showMiniMaps}
-                    />
-                  </div>
-                )
-              })
-              }
+              {fileNames.map((file) =>
+                // <Pane minSize={50} maxSize='50%'>
+                <div key={file} className={`editor-container ${darkMode ? 'dark' : 'light'}`}>
+                  <h2 style={{ textAlign: 'center' }}>{file}</h2>
+                  <CodeEditor
+                    language={files[file].language}
+                    file={file}
+                    files={files}
+                    handleChange={handleChange}
+                    theme={darkMode}
+                    showMinimaps={showMiniMaps}
+                  />
+                </div>
+                // </Pane>
+              )}
             </Split>
             <div
               style={{ textAlign: 'center', marginTop: '60px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0px', height: '60px', paddingLeft: '15px', paddingRight: '15px' }}
@@ -223,7 +222,6 @@ function App() {
             </div>
             <Split
               className='split'
-            // [0.8,0.2]
             ><iframe
                 title="output"
                 ref={iframeRef}

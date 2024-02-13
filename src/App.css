@@ -10,13 +10,14 @@ body {
   flex-direction: row;
   height: 50vh;
   margin-bottom: 0px;
+  width: 100vw;
 }
 
 .gutter {
   background-color: #eee;
   background-repeat: no-repeat;
   background-position: 50%;
-  height: 115%;
+  height: 50vh;
 }
 
 .gutter:hover {
@@ -43,6 +44,11 @@ button {
   border: none;
   background-color: #4CAF50;
   color: white;
+}
+
+.split2 {
+  display: flex;
+  flex-direction: row;
 }
 
 .dark-mode-toggle {
