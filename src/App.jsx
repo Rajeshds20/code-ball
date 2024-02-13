@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-// import Split from 'react-split';
+import Split from 'react-split';
 import { db } from './config/firebase';
 import { collection, addDoc, getDocs, onSnapshot, query, setDoc, doc, updateDoc, where } from 'firebase/firestore';
 import { defaults } from './config/default';
@@ -9,7 +9,6 @@ import ShareDialog from './components/ShareDialog';
 import Editor from '@monaco-editor/react';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import NightlightRoundIcon from '@mui/icons-material/NightlightRound';
-import SplitPane, { Pane } from 'split-pane-react';
 import 'split-pane-react/esm/themes/default.css';
 import './App.css';
 import SavedModal from './components/SavedModal';
@@ -258,7 +257,7 @@ function App() {
                     setOutputLog('');
                   }}>Clear</button>
               </div>
-            </SplitPane>
+            </Split>
             <ShareDialog open={shareDialogOpen} handleClose={handleShareClose} handleClickOpen={handleShareOpen} codeBallId={codeBallId} />
             <div
               title='Toggle Theme'
