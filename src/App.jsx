@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import Split from 'react-split';
+// import Split from 'react-split';
 import { db } from './config/firebase';
 import { collection, addDoc, getDocs, onSnapshot, query, setDoc, doc, updateDoc, where } from 'firebase/firestore';
 import { defaults } from './config/default';
@@ -9,6 +9,8 @@ import ShareDialog from './components/ShareDialog';
 import Editor from '@monaco-editor/react';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import NightlightRoundIcon from '@mui/icons-material/NightlightRound';
+import SplitPane, { Pane } from 'split-pane-react';
+import 'split-pane-react/esm/themes/default.css';
 import './App.css';
 import SavedModal from './components/SavedModal';
 
@@ -28,6 +30,8 @@ function App() {
   const [darkMode, setDarkMode] = React.useState(false);
   const [savedModalOpen, setSavedModalOpen] = React.useState(false);
   const [showMiniMaps, setShowMiniMaps] = React.useState(false);
+  const [sizes1, setSizes1] = React.useState([100, '30%', 'auto']);
+  const [sizes2, setSizes2] = React.useState([100, '30%', 'auto']);
 
   const runCode = () => {
     const iframe = iframeRef.current;
@@ -184,6 +188,13 @@ function App() {
     setShareDialogOpen(false);
   };
 
+  const layoutCSS = {
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  };
+
   return (
     <>
       {
@@ -247,7 +258,7 @@ function App() {
                     setOutputLog('');
                   }}>Clear</button>
               </div>
-            </Split>
+            </SplitPane>
             <ShareDialog open={shareDialogOpen} handleClose={handleShareClose} handleClickOpen={handleShareOpen} codeBallId={codeBallId} />
             <div
               title='Toggle Theme'
