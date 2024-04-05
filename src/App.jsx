@@ -184,6 +184,33 @@ function App() {
     setShareDialogOpen(false);
   };
 
+  const downloadFilesZip = () => {
+    // Initialize JSZip
+    var zip = new JSZip();
+
+    // Add files to the ZIP
+    for (var file in files) {
+      zip.file(file, files[file].value);
+    }
+
+    // Generate the ZIP file asynchronously
+    zip.generateAsync({ type: "blob" })
+      .then(function (content) {
+        // Create a link element
+        var link = document.createElement('a');
+        // Set the download attribute with the name of the ZIP file
+        link.download = `code-ball-files${codeBallId ? '-' + codeBallId : ''}.zip`;
+        // Create a Blob from the ZIP content
+        link.href = URL.createObjectURL(content);
+        // Append the link to the document body
+        document.body.appendChild(link);
+        // Trigger a click event on the link to initiate download
+        link.click();
+        // Remove the link from the document
+        document.body.removeChild(link);
+      });
+  }
+
   return (
     <>
       {
@@ -260,10 +287,17 @@ function App() {
                   : <LightModeIcon className='light-mode' />
               }
             </div>
-            <div className='editor-actions'>
+            <div style={{
+              backgroundColor: 'transparent',
+              color: darkMode ? 'white' : '#333',
+            }} className='editor-actions'>
               <input className='show-minimaps' id='show-minimaps' type='checkbox' checked={showMiniMaps} onClick={() => { setShowMiniMaps(prev => !prev) }} />
               <label htmlFor='show-minimaps'>Minimaps</label>
             </div>
+            {/* Floating download button */}
+            <button className='editor-actions-download' onClick={downloadFilesZip}>
+              Download
+            </button>
             {savedModalOpen && <SavedModal open={savedModalOpen} handleClose={() => { setSavedModalOpen(false) }} />}
           </>
       }
